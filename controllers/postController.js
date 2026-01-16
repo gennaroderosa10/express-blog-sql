@@ -19,16 +19,26 @@ function index(req, res) {
 };
 
 function show(req, res) {
-    const id = parseInt(req.params.id);
-    const post = postsArray.find(post => post.id === id);
+    const id = req.params.id;
+    const query = "SELECT * FROM `posts` WHERE `posts`.`id` = ?";
+    connection.query(query, [id], (err, result) => {
+        if (err) {
+            res.status(500);
+            return res.json({
+                message: "server error",
+            })
+        }
 
-    if (post === undefined) {
-        res.status(404);
-        return res.json({
-            message: "post non disponibile",
-        })
-    }
-    res.json(post)
+        if (result.length === 0) {
+            res.status(404)
+            res.json({
+                message: "post non trovato",
+            });
+        } else {
+            const post = result[0];
+            res.json(post);
+        }
+    });
 
 }
 
@@ -106,17 +116,23 @@ function modify(req, res) {
 }
 
 function destroy(req, res) {
-    const id = parseInt(req.params.id);
-    const postIndex = postsArray.findIndex((post) => post.id === id)
+    const id = req.params.id;
+    const query = "DELETE FROM `posts` WHERE id = ?";
 
-    if (postIndex === -1) {
-        res.status(404)
-        return res.json({
-            message: "post non disponibile"
-        })
-    }
-    postsArray.splice(postIndex, 1)
-    res.sendStatus(204)
+    connection.query(query, [id], (err) => {
+        if (err) {
+            res.status(500);
+            return res.json({
+                message: "server error",
+            })
+        }
+
+        res.sendStatus(204);
+    });
+
+
+
+
 
 }
 
